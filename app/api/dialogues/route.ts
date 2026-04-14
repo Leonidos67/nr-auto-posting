@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import connectMongoDB from '@/lib/mongodb';
 import Dialogue from '@/models/Dialogue';
+import mongoose from 'mongoose';
 import axios from 'axios';
 import FormData from 'form-data';
 
@@ -27,9 +28,13 @@ export async function GET(request: NextRequest) {
     console.log('MongoDB connected');
 
     // Получаем все диалоги пользователя, отсортированные по дате
-    const dialogues = await Dialogue.find({ userId: payload.userId })
-      .sort({ createdAt: -1 })
-      .select('_id modelVersion messages createdAt updatedAt');
+    // Используем aggregate с allowDiskUse для обхода лимита памяти
+    const dialogues = await Dialogue.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(payload.userId) } },
+      { $project: { _id: 1, modelVersion: 1, messages: 1, createdAt: 1, updatedAt: 1 } },
+      { $sort: { createdAt: -1 } },
+      { $limit: 100 }
+    ]).option({ allowDiskUse: true });
     
     console.log('Found dialogues:', dialogues.length);
 

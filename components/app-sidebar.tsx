@@ -12,6 +12,9 @@ import {
   User,
   BookOpen,
   History,
+  Factory,
+  FolderArchive,
+  FolderClock,
 } from "lucide-react"
 
 import { NavMain } from '@/components/nav-main'
@@ -56,11 +59,6 @@ const data = {
       icon: User,
     },
     {
-      title: "История",
-      url: "#",
-      icon: History,
-    },
-    {
       title: "Сгенерировать",
       url: "#",
       icon: Zap,
@@ -89,8 +87,13 @@ const data = {
       icon: Folder,
     },
     {
+      title: "Контент-Завод",
+      url: "/app/factory",
+      icon: Factory,
+    },
+    {
       title: "Площадки",
-      url: "#",
+      url: "/app/platforms",
       icon: MonitorPlay,
     },
   ],

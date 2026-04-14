@@ -42,15 +42,28 @@ export function NavProjects() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
     const fetchDialogues = async () => {
       try {
         const response = await fetch('/api/dialogues')
         if (response.ok) {
           const data = await response.json()
           setDialogues(data.dialogues || [])
+          // Start polling only after successful fetch
+          if (!interval) {
+            interval = setInterval(fetchDialogues, 30000) // Every 30 seconds instead of 5
+          }
+        } else {
+          console.error('Failed to fetch dialogues:', response.status)
         }
       } catch (error) {
         console.error('Error fetching dialogues:', error)
+        // Stop polling on error
+        if (interval) {
+          clearInterval(interval)
+          interval = null
+        }
       } finally {
         setLoading(false)
       }
@@ -58,15 +71,14 @@ export function NavProjects() {
 
     fetchDialogues()
 
-    // Обновляем историю каждые 5 секунд
-    const interval = setInterval(fetchDialogues, 5000)
-
     // Слушаем событие обновления истории
     const handleRefresh = () => fetchDialogues()
     window.addEventListener('refreshHistory', handleRefresh)
 
     return () => {
-      clearInterval(interval)
+      if (interval) {
+        clearInterval(interval)
+      }
       window.removeEventListener('refreshHistory', handleRefresh)
     }
   }, [])
@@ -89,7 +101,10 @@ export function NavProjects() {
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>История</SidebarGroupLabel>
+      <div className="flex items-center">
+        <History className="w-3 h-3 text-muted-foreground" />
+        <SidebarGroupLabel>История</SidebarGroupLabel>
+      </div>
       <SidebarMenu>
         {loading ? (
           <SidebarMenuItem>
@@ -100,8 +115,7 @@ export function NavProjects() {
         ) : dialogues.length === 0 ? (
           <SidebarMenuItem>
             <SidebarMenuButton disabled>
-              <History className="text-muted-foreground" />
-              <span className="text-muted-foreground">Нет истории</span>
+              <span className="text-muted-foreground">Ваши проекты будут отображаться здесь</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ) : (
