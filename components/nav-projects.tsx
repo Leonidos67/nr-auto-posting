@@ -1,9 +1,10 @@
 "use client"
 
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
-  Folder,
+  History,
   MoreHorizontal,
-  Share,
   Trash2,
   type LucideIcon,
 } from "lucide-react"
@@ -25,64 +26,120 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
-export function NavProjects({
-  projects,
-}: {
-  projects: {
-    name: string
-    url: string
-    icon: LucideIcon
-  }[]
-}) {
+interface Dialogue {
+  id: string
+  title: string
+  modelVersion: string
+  createdAt: string
+  updatedAt: string
+  messageCount: number
+}
+
+export function NavProjects() {
   const { isMobile } = useSidebar()
+  const router = useRouter()
+  const [dialogues, setDialogues] = useState<Dialogue[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDialogues = async () => {
+      try {
+        const response = await fetch('/api/dialogues')
+        if (response.ok) {
+          const data = await response.json()
+          setDialogues(data.dialogues || [])
+        }
+      } catch (error) {
+        console.error('Error fetching dialogues:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDialogues()
+
+    // Обновляем историю каждые 5 секунд
+    const interval = setInterval(fetchDialogues, 5000)
+
+    // Слушаем событие обновления истории
+    const handleRefresh = () => fetchDialogues()
+    window.addEventListener('refreshHistory', handleRefresh)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('refreshHistory', handleRefresh)
+    }
+  }, [])
+
+  const handleDialogueClick = (dialogueId: string) => {
+    router.push(`/app/image/${dialogueId}`)
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    
+    if (days === 0) return 'Сегодня'
+    if (days === 1) return 'Вчера'
+    if (days < 7) return `${days} дн. назад`
+    return date.toLocaleDateString('ru-RU')
+  }
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarGroupLabel>История</SidebarGroupLabel>
       <SidebarMenu>
-        {projects.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <a href={item.url}>
-                <item.icon />
-                <span>{item.name}</span>
-              </a>
+        {loading ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton disabled>
+              <div className="animate-pulse h-4 w-32 bg-muted rounded"></div>
             </SidebarMenuButton>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuAction showOnHover>
-                  <MoreHorizontal />
-                  <span className="sr-only">More</span>
-                </SidebarMenuAction>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-48"
-                side={isMobile ? "bottom" : "right"}
-                align={isMobile ? "end" : "start"}
-              >
-                <DropdownMenuItem>
-                  <Folder className="text-muted-foreground" />
-                  <span>View Project</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Share className="text-muted-foreground" />
-                  <span>Share Project</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Trash2 className="text-muted-foreground" />
-                  <span>Delete Project</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </SidebarMenuItem>
-        ))}
-        <SidebarMenuItem>
-          <SidebarMenuButton>
-            <MoreHorizontal />
-            <span>More</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        ) : dialogues.length === 0 ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton disabled>
+              <History className="text-muted-foreground" />
+              <span className="text-muted-foreground">Нет истории</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ) : (
+          dialogues.map((dialogue) => (
+            <SidebarMenuItem key={dialogue.id}>
+              <SidebarMenuButton onClick={() => handleDialogueClick(dialogue.id)}>
+                <History className="text-muted-foreground" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="truncate">{dialogue.title}</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(dialogue.updatedAt)}</span>
+                </div>
+              </SidebarMenuButton>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuAction showOnHover>
+                    <MoreHorizontal />
+                    <span className="sr-only">More</span>
+                  </SidebarMenuAction>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-48"
+                  side={isMobile ? "bottom" : "right"}
+                  align={isMobile ? "end" : "start"}
+                >
+                  <DropdownMenuItem onClick={() => handleDialogueClick(dialogue.id)}>
+                    <History className="text-muted-foreground" />
+                    <span>Открыть чат</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Trash2 className="text-muted-foreground" />
+                    <span>Удалить чат</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          ))
+        )}
       </SidebarMenu>
     </SidebarGroup>
   )

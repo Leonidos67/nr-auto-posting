@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import connectMongoDB from '@/lib/mongodb';
 import Dialogue from '@/models/Dialogue';
+import axios from 'axios';
+import FormData from 'form-data';
 
 export async function POST(
   request: NextRequest,
@@ -52,11 +54,53 @@ export async function POST(
     
     dialogue.messages.push(userMessage);
 
-    // TODO: Integrate with real image generation API (OpenAI, Stability AI, etc.)
-    // For now, AI responds with text confirmation. Image will be added when generation is implemented.
+    // Генерируем изображение через Stability AI
+    let imageUrl = '';
+    
+    // Проверяем режим теста
+    if (process.env.TEST_MODE === 'true') {
+      // Тестовый режим - используем placeholder изображение
+      console.log('TEST MODE: Skipping real image generation');
+      // Имитируем задержку генерации
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      imageUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    } else {
+      // Реальный режим - вызываем Stability AI
+      try {
+        const aspectRatio = settings?.aspectRatio || '1:1';
+        const outputFormat = 'png';
+        
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        formData.append('aspect_ratio', aspectRatio);
+        formData.append('output_format', outputFormat);
+
+        const stabilityResponse = await axios.post(
+          'https://api.stability.ai/v2beta/stable-image/generate/core',
+          formData,
+          {
+            validateStatus: undefined,
+            responseType: 'arraybuffer',
+            headers: {
+              Authorization: `Bearer ${process.env.STABILITY_API_KEY}`,
+              Accept: 'image/*',
+              ...formData.getHeaders(),
+            },
+          }
+        );
+
+        if (stabilityResponse.status === 200) {
+          const base64Image = Buffer.from(stabilityResponse.data).toString('base64');
+          imageUrl = `data:image/png;base64,${base64Image}`;
+        }
+      } catch (error) {
+        console.error('Error generating image with Stability AI:', error);
+      }
+    }
+
     const assistantMessage = {
       role: 'assistant' as const,
-      // prompt: `Генерация изображения: "${prompt}"`,
+      imageUrl: imageUrl || '',
       settings: userMessage.settings,
     };
 

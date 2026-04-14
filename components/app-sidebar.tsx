@@ -3,23 +3,15 @@
 import * as React from "react"
 import {
   Command,
-  Frame,
   LifeBuoy,
-  Map,
-  PieChart,
-  Send,
   LogOut,
-  LayoutDashboard,
   MonitorPlay,
-  Video,
-  Plus,
   Folder,
   Zap,
   Home,
   User,
-  Settings,
-  HelpCircle,
   BookOpen,
+  History,
 } from "lucide-react"
 
 import { NavMain } from '@/components/nav-main'
@@ -64,6 +56,11 @@ const data = {
       icon: User,
     },
     {
+      title: "История",
+      url: "#",
+      icon: History,
+    },
+    {
       title: "Сгенерировать",
       url: "#",
       icon: Zap,
@@ -75,11 +72,11 @@ const data = {
         {
           title: "Создать видео",
           url: "/app/video/new",
-        },,
+        },
         {
           title: "Наложить аудио",
           url: "/app/audio/new",
-        },,
+        },
         {
           title: "Работа с текстом",
           url: "/app/text/new",
@@ -105,24 +102,6 @@ const data = {
       icon: BookOpen,
     },
   ],
-  
-  // projects: [
-  //   {
-  //     name: "Design Engineering",
-  //     url: "#",
-  //     icon: Frame,
-  //   },
-  //   {
-  //     name: "Sales & Marketing",
-  //     url: "#",
-  //     icon: PieChart,
-  //   },
-  //   {
-  //     name: "Travel",
-  //     url: "#",
-  //     icon: Map,
-  //   },
-  // ],
 }
 
 export function AppSidebar({ user, onLogout, ...props }: AppSidebarProps) {
@@ -153,7 +132,7 @@ export function AppSidebar({ user, onLogout, ...props }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
+        <NavProjects />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

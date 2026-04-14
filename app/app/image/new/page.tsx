@@ -65,6 +65,9 @@ export default function NewImagePage() {
   }>>([]);
   const [currentDialogueId, setCurrentDialogueId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true';
+  const [isGenerated, setIsGenerated] = useState(false);
+  const [isInitialGeneration, setIsInitialGeneration] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -89,6 +92,9 @@ export default function NewImagePage() {
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
+    const userPrompt = prompt;
+    const currentImageRefs = imageReferences.map(ref => ref.preview);
+    
     setIsGenerating(true);
 
     try {
@@ -99,8 +105,8 @@ export default function NewImagePage() {
         },
         body: JSON.stringify({
           modelVersion: selectedModel,
-          prompt,
-          imageReferences: imageReferences.map(ref => ref.preview),
+          prompt: userPrompt,
+          imageReferences: currentImageRefs,
           settings: {
             mode,
             aspectRatio,
@@ -115,20 +121,10 @@ export default function NewImagePage() {
 
       const data = await response.json();
       
-      // Fetch the created dialogue to get both user and AI messages
-      const dialogueResponse = await fetch(`/api/dialogues/${data.dialogueId}`);
-      if (dialogueResponse.ok) {
-        const dialogueData = await dialogueResponse.json();
-        setMessages(dialogueData.dialogue.messages || []);
-      }
-      
-      setCurrentDialogueId(data.dialogueId);
-      setDialogueStarted(true);
-      setPrompt('');
-      setImageReferences([]);
+      // Редирект на страницу диалога
+      router.push(`/app/image/${data.dialogueId}`);
     } catch (error) {
       console.error('Error creating dialogue:', error);
-    } finally {
       setIsGenerating(false);
     }
   };
@@ -157,7 +153,33 @@ export default function NewImagePage() {
   const handleSendMessage = async () => {
     if (!prompt.trim() || !currentDialogueId) return;
 
+    const userPrompt = prompt;
+    const currentImageRefs = imageReferences.map(ref => ref.preview);
+    
+    // Сразу добавляем сообщение пользователя
+    const tempUserMessage = {
+      _id: 'temp-' + Date.now(),
+      role: 'user' as const,
+      prompt: userPrompt,
+      imageReferences: currentImageRefs,
+      settings: {
+        mode,
+        aspectRatio,
+        imageCount,
+      },
+      createdAt: new Date().toISOString(),
+    };
+    
+    setMessages(prev => [...prev, tempUserMessage]);
+    setPrompt('');
+    setImageReferences([]);
+    setIsGenerated(false);
+    
+    // Небольшая задержка чтобы UI успел обновиться
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     setIsGenerating(true);
+    const startTime = Date.now();
 
     try {
       const response = await fetch(`/api/dialogues/${currentDialogueId}/messages`, {
@@ -166,8 +188,8 @@ export default function NewImagePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt,
-          imageReferences: imageReferences.map(ref => ref.preview),
+          prompt: userPrompt,
+          imageReferences: currentImageRefs,
           settings: {
             mode,
             aspectRatio,
@@ -186,12 +208,15 @@ export default function NewImagePage() {
         const dialogueData = await dialogueResponse.json();
         setMessages(dialogueData.dialogue.messages || []);
       }
-      
-      setPrompt('');
-      setImageReferences([]);
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
+      // Минимальное время генерации - 3 секунды
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 3000 - elapsedTime);
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+      
+      setIsGenerated(true);
       setIsGenerating(false);
     }
   };
@@ -270,7 +295,7 @@ export default function NewImagePage() {
                       </div>
                     )}
                     
-                    {message.role === 'assistant' && (
+                    {message.role === 'assistant' && !isGenerating && (
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 rounded-full  flex items-center justify-center flex-shrink-0">
                           {/* <span className="text-xs font-medium text-green-500">AI</span> */}
@@ -281,33 +306,59 @@ export default function NewImagePage() {
                               <p className="text-sm">{message.prompt}</p>
                             </div>
                           )}
-                          <div className="grid grid-cols-4 gap-3">
-                            {Array.from({ length: message.settings?.imageCount || 1 }).map((_, idx) => {
-                              const ratio = message.settings?.aspectRatio || '1:1';
-                              const aspectRatioStyle: React.CSSProperties = ratio === '1:1' 
-                                ? { aspectRatio: '1/1' }
-                                : ratio === '16:9' 
-                                ? { aspectRatio: '16/9' }
-                                : ratio === '9:16' 
-                                ? { aspectRatio: '9/16' }
-                                : ratio === '4:3'
-                                ? { aspectRatio: '4/3' }
-                                : { aspectRatio: '1/1' };
-                              
-                              return (
-                                <PixelCard key={idx} variant="default" className="w-full">
-                                  {message.imageUrl && (
+                          {message.imageUrl ? (
+                            // Показываем изображение без PixelCard когда оно готово
+                            <div className="grid grid-cols-4 gap-3">
+                              {Array.from({ length: message.settings?.imageCount || 1 }).map((_, idx) => {
+                                const ratio = message.settings?.aspectRatio || '1:1';
+                                const aspectRatioStyle: React.CSSProperties = ratio === '1:1' 
+                                  ? { aspectRatio: '1/1' }
+                                  : ratio === '16:9' 
+                                  ? { aspectRatio: '16/9' }
+                                  : ratio === '9:16' 
+                                  ? { aspectRatio: '9/16' }
+                                  : ratio === '4:3'
+                                  ? { aspectRatio: '4/3' }
+                                  : { aspectRatio: '1/1' };
+                                
+                                return (
+                                  <div key={idx} className="w-full rounded-lg overflow-hidden bg-muted">
                                     <img
                                       src={message.imageUrl}
                                       alt="Generated"
-                                      className="w-full rounded-lg"
+                                      className="w-full"
                                       style={{ ...aspectRatioStyle, objectFit: 'cover' }}
                                     />
-                                  )}
-                                </PixelCard>
-                              );
-                            })}
-                          </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            // Показываем PixelCard только когда изображение еще не готово
+                            <div className="grid grid-cols-4 gap-3">
+                              {Array.from({ length: message.settings?.imageCount || 1 }).map((_, idx) => {
+                                const ratio = message.settings?.aspectRatio || '1:1';
+                                const aspectRatioStyle: React.CSSProperties = ratio === '1:1' 
+                                  ? { aspectRatio: '1/1' }
+                                  : ratio === '16:9' 
+                                  ? { aspectRatio: '16/9' }
+                                  : ratio === '9:16' 
+                                  ? { aspectRatio: '9/16' }
+                                  : ratio === '4:3'
+                                  ? { aspectRatio: '4/3' }
+                                  : { aspectRatio: '1/1' };
+                                
+                                return (
+                                  <PixelCard key={idx} variant="default" className="w-full">
+                                    <div
+                                      className="w-full"
+                                      style={{ ...aspectRatioStyle }}
+                                    />
+                                  </PixelCard>
+                                );
+                              })}
+                            </div>
+                          )}
                           {/* <p className="text-xs text-muted-foreground">
                             {new Date(message.createdAt).toLocaleString('ru-RU')}
                           </p> */}
@@ -323,14 +374,30 @@ export default function NewImagePage() {
                     </div>
                     <div className="flex-1 max-w-[70%] space-y-2">
                       <div className="rounded-2xl">
-                        <div className="flex items-center gap-2">
-                          <div className="flex gap-1">
-                            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                          </div>
-                          <p className="text-sm">Генерирую...</p>
-                        </div>
+                        <p className="text-sm mb-2">Генерирую...</p>
+                      </div>
+                      <div className="grid grid-cols-4 gap-3">
+                        {Array.from({ length: imageCount }).map((_, idx) => {
+                          const ratio = aspectRatio;
+                          const aspectRatioStyle: React.CSSProperties = ratio === '1:1' 
+                            ? { aspectRatio: '1/1' }
+                            : ratio === '16:9' 
+                            ? { aspectRatio: '16/9' }
+                            : ratio === '9:16' 
+                            ? { aspectRatio: '9/16' }
+                            : ratio === '4:3'
+                            ? { aspectRatio: '4/3' }
+                            : { aspectRatio: '1/1' };
+                          
+                          return (
+                            <PixelCard key={idx} variant="default" className="w-full">
+                              <div
+                                className="w-full"
+                                style={{ ...aspectRatioStyle }}
+                              />
+                            </PixelCard>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -350,6 +417,16 @@ export default function NewImagePage() {
 
           {/* Bottom - Fixed Input Form */}
           <div className="fixed bottom-4 left-0 right-2 px-12 z-50 space-y-2 bg-background" style={{ marginLeft: 'var(--sidebar-width, 0px)' }}>
+            {/* Test Mode Indicator */}
+            {isTestMode && (
+              <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                <p className="text-xs font-medium text-yellow-600 dark:text-yellow-400">
+                  ТЕСТОВЫЙ РЕЖИМ - кредиты не списываются
+                </p>
+              </div>
+            )}
+            
             {/* Model Selection Dropdown with Settings & Styles */}
             <div className="space-y-2">
               <div className="flex gap-2">
