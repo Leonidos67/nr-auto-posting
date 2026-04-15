@@ -267,12 +267,12 @@ export default function Page() {
             </div>
             <div className="flex items-center justify-center min-h-[240px]">
               <div className="text-center">
-                <p className="text-md text-muted-foreground">Проектов пока нет</p>
+                <p className="text-md text-muted-foreground">У вас нет проектов</p>
                 <p className="text-xs text-muted-foreground">
                   <button className="underline hover:text-white transition-colors cursor-pointer">
                     Создайте свой первый проект
                   </button>
-                  , чтобы начать работу.
+                  , для того чтобыпродолжить работу.
                 </p>
               </div>
             </div>

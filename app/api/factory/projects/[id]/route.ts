@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import connectMongoDB from '@/lib/mongodb';
 import ContentProject from '@/models/ContentProject';
+import StyleReference from '@/models/StyleReference';
 
 // GET /api/factory/projects/[id]
 export async function GET(
@@ -87,6 +88,59 @@ export async function PATCH(
     console.error('Error updating project:', error);
     return NextResponse.json(
       { error: 'Failed to update project', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/factory/projects/[id]
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const token = request.cookies.get('auth-token')?.value;
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    await connectMongoDB();
+
+    // Delete associated style references first
+    await StyleReference.deleteMany({
+      projectId: resolvedParams.id,
+      userId: payload.userId,
+    });
+
+    // Delete the project
+    const project = await ContentProject.findOneAndDelete({
+      _id: resolvedParams.id,
+      userId: payload.userId,
+    });
+
+    if (!project) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Project and associated references deleted successfully' 
+    });
+  } catch (error: any) {
+    console.error('Error deleting project:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete project', details: error.message },
       { status: 500 }
     );
   }

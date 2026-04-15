@@ -41,11 +41,10 @@ export default function NewProjectPage() {
   };
 
   const platforms = [
-    { id: 'youtube-shorts', name: 'YouTube Shorts', icon: '🎬' },
+    { id: 'youtube-shorts', name: 'YouTube', icon: '🎬' },
     { id: 'tiktok', name: 'TikTok', icon: '🎵' },
-    { id: 'instagram-reels', name: 'Instagram Reels', icon: '📸' },
+    { id: 'instagram-reels', name: 'Instagram', icon: '📸' },
     { id: 'pinterest', name: 'Pinterest', icon: '📌' },
-    { id: 'rutube', name: 'Rutube', icon: '🎥' },
   ];
 
   const togglePlatform = (platformId: string) => {
@@ -114,21 +113,23 @@ export default function NewProjectPage() {
     <SidebarProvider>
       <AppSidebar user={user} onLogout={handleLogout} />
       <SidebarInset className="overflow-x-hidden">
-        <div className="flex-1 p-8 max-w-4xl mx-auto space-y-8">
+        <div className="flex-1 p-8 min-w-4xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push('/app/factory')}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
             <div>
-              <h1 className="text-3xl font-bold flex items-center gap-3">
-                <Factory className="w-8 h-8 text-primary" />
-                Новый проект
-              </h1>
+              <div className='flex items-center justify-between gap-2'>
+                <Button
+                  className='cursor-pointer'
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => router.push('/app/factory')}
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <h1 className="text-3xl font-bold flex items-center gap-3">
+                  Новый проект
+                </h1>
+              </div>
               <p className="text-muted-foreground mt-1">
                 Шаг {step} из 3
               </p>
@@ -251,7 +252,7 @@ export default function NewProjectPage() {
                   <div className="grid grid-cols-3 gap-2">
                     {[
                       { ratio: '9:16', label: 'Вертикальное', desc: 'Shorts, Reels, TikTok' },
-                      { ratio: '16:9', label: 'Горизонтальное', desc: 'YouTube, Rutube' },
+                      { ratio: '16:9', label: 'Горизонтальное', desc: 'YouTube' },
                       { ratio: '1:1', label: 'Квадрат', desc: 'Instagram, Pinterest' },
                     ].map((option) => (
                       <button

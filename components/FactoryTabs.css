@@ -1,0 +1,40 @@
+.factory-tabs-container {
+  position: relative;
+  display: inline-flex;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.factory-tab-button {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  border-radius: 0.5rem;
+}
+
+.factory-tab-button.active {
+  color: white;
+  /* font-weight: bold; */
+}
+
+/* Sliding background indicator */
+.tab-indicator {
+  position: absolute;
+  z-index: 1;
+  height: calc(100% - 0.5rem);
+  background: lab(15.204% 0 0);
+  border-radius: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}

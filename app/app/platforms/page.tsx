@@ -14,6 +14,7 @@ import {
   ExternalLink,
   AlertCircle,
   Loader2,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { YouTubeIcon, TikTokIcon, InstagramIcon, PinterestIcon, TelegramIcon, VKIcon } from '@/components/social-icons';
 
 interface ConnectedPlatform {
   _id: string;
@@ -38,8 +40,6 @@ interface PlatformConfig {
   id: string;
   name: string;
   icon: string;
-  color: string;
-  description: string;
   fields: {
     name: string;
     label: string;
@@ -56,6 +56,7 @@ export default function PlatformsPage() {
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformConfig | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -88,10 +89,8 @@ export default function PlatformsPage() {
   const platforms: PlatformConfig[] = [
     {
       id: 'youtube-shorts',
-      name: 'YouTube Shorts',
-      icon: '🎬',
-      color: 'bg-red-500',
-      description: 'Короткие вертикальные видео до 60 секунд',
+      name: 'YouTube',
+      icon: 'youtube',
       fields: [
         { name: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Введите API ключ YouTube' },
         { name: 'channelId', label: 'Channel ID', type: 'text', placeholder: 'UCxxxxxxxxxxxxxxxxxxxxxx' },
@@ -100,9 +99,7 @@ export default function PlatformsPage() {
     {
       id: 'tiktok',
       name: 'TikTok',
-      icon: '🎵',
-      color: 'bg-black',
-      description: 'Короткие видео с музыкой и эффектами',
+      icon: 'tiktok',
       fields: [
         { name: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Введите Access Token' },
         { name: 'openId', label: 'Open ID', type: 'text', placeholder: 'Введите Open ID' },
@@ -110,10 +107,8 @@ export default function PlatformsPage() {
     },
     {
       id: 'instagram-reels',
-      name: 'Instagram Reels',
-      icon: '📸',
-      color: 'bg-gradient-to-br from-purple-500 to-pink-500',
-      description: 'Видео до 90 секунд с музыкой',
+      name: 'Instagram',
+      icon: 'instagram',
       fields: [
         { name: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Instagram Access Token' },
         { name: 'accountId', label: 'Account ID', type: 'text', placeholder: 'Instagram Business Account ID' },
@@ -122,31 +117,16 @@ export default function PlatformsPage() {
     {
       id: 'pinterest',
       name: 'Pinterest',
-      icon: '📌',
-      color: 'bg-red-600',
-      description: 'Визуальные пины и видеопины',
+      icon: 'pinterest',
       fields: [
         { name: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Pinterest Access Token' },
         { name: 'boardId', label: 'Board ID', type: 'text', placeholder: 'ID доски для публикаций' },
       ],
     },
     {
-      id: 'rutube',
-      name: 'Rutube',
-      icon: '🎥',
-      color: 'bg-blue-500',
-      description: 'Российская видеоплатформа',
-      fields: [
-        { name: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Введите API ключ Rutube' },
-        { name: 'channelId', label: 'Channel ID', type: 'text', placeholder: 'ID канала' },
-      ],
-    },
-    {
       id: 'telegram',
       name: 'Telegram',
-      icon: '✈️',
-      color: 'bg-blue-400',
-      description: 'Публикации в канал или группу',
+      icon: 'telegram',
       fields: [
         { name: 'botToken', label: 'Bot Token', type: 'password', placeholder: '1234567890:ABC...' },
         { name: 'channelId', label: 'Channel ID', type: 'text', placeholder: '@channelname или -100xxxxxxxxxx' },
@@ -154,16 +134,19 @@ export default function PlatformsPage() {
     },
     {
       id: 'vk',
-      name: 'VKontakte',
-      icon: '💬',
-      color: 'bg-blue-600',
-      description: 'Публикации в группу или на страницу',
+      name: 'VK',
+      icon: 'vk',
       fields: [
         { name: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'VK Access Token' },
         { name: 'groupId', label: 'Group ID', type: 'text', placeholder: 'ID группы (без @)' },
       ],
     },
   ];
+
+  // Фильтрация платформ по поисковому запросу
+  const filteredPlatforms = platforms.filter(platform =>
+    platform.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleConnect = async () => {
     if (!selectedPlatform) return;
@@ -222,6 +205,25 @@ export default function PlatformsPage() {
     return connectedPlatforms.some(p => p.platform === platformId && p.status === 'connected');
   };
 
+  const renderIcon = (iconName: string, className: string = "w-6 h-6") => {
+    switch (iconName) {
+      case 'youtube':
+        return <YouTubeIcon className={className} />;
+      case 'tiktok':
+        return <TikTokIcon className={className} />;
+      case 'instagram':
+        return <InstagramIcon className={className} />;
+      case 'pinterest':
+        return <PinterestIcon className={className} />;
+      case 'telegram':
+        return <TelegramIcon className={className} />;
+      case 'vk':
+        return <VKIcon className={className} />;
+      default:
+        return null;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -243,10 +245,9 @@ export default function PlatformsPage() {
             <div className="flex items-center justify-between">
               <h1 className="text-lg font-bold">Подключенные площадки</h1>
               <div className='flex gap-2'>
-                
-              <Badge variant="secondary" className="text-sm">
-                Подключено: {connectedPlatforms.filter(p => p.status === 'connected').length}
-              </Badge>
+                <Badge variant="secondary" className="text-sm">
+                  Подключено: {connectedPlatforms.filter(p => p.status === 'connected').length}
+                </Badge>
               </div>
             </div>
 
@@ -259,9 +260,8 @@ export default function PlatformsPage() {
             <div className="p-4">
               {connectedPlatforms.length === 0 ? (
                 <div className="text-center py-12 space-y-4">
-                  <AlertCircle className="w-16 h-16 mx-auto text-muted-foreground/50" />
                   <div>
-                    <p className="text-md text-muted-foreground">Нет подключенных площадок</p>
+                    <p className="text-md text-muted-foreground">У вас нет подключенных площадок</p>
                     <p className="text-xs text-muted-foreground">
                       Подключите хотя бы одну социальную сеть для начала работы.
                     </p>
@@ -278,19 +278,21 @@ export default function PlatformsPage() {
                         className="flex items-center justify-between p-4 rounded-lg border hover:border-primary/50 transition-colors"
                       >
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-lg ${config?.color || 'bg-gray-500'} flex items-center justify-center text-2xl`}>
-                            {config?.icon || '🔗'}
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center shadow-lg`}>
+                            {config && renderIcon(config.icon, "w-6 h-6 text-white")}
                           </div>
                           <div>
-                            <p className="font-medium">{platform.accountName}</p>
-                            <p className="text-sm text-muted-foreground">{config?.name}</p>
+                            <p className="font-medium">{config?.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {platform.postsCount} публикаций
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="text-right">
                             <div className="flex items-center gap-2">
                               {platform.status === 'connected' && (
-                                <Badge className="bg-green-500">
+                                <Badge className="bg-white">
                                   <Check className="w-3 h-3 mr-1" />
                                   Подключено
                                 </Badge>
@@ -308,9 +310,6 @@ export default function PlatformsPage() {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {platform.postsCount} публикаций
-                            </p>
                           </div>
                           {platformId && (
                             <Button
@@ -331,156 +330,134 @@ export default function PlatformsPage() {
           </div>
 
           {/* Available Platforms */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Доступные площадки</CardTitle>
-              <CardDescription>
-                Выберите социальную сеть для подключения
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {platforms.map((platform) => {
-                  const connected = isConnected(platform.id);
-                  return (
-                    <div
-                      key={platform.id}
-                      className={`relative rounded-lg border p-6 space-y-4 transition-all ${
-                        connected ? 'bg-green-500/5 border-green-500/20' : 'hover:border-primary/50'
-                      }`}
-                    >
-                      {connected && (
-                        <div className="absolute top-2 right-2">
-                          <Badge className="bg-green-500">
-                            <Check className="w-3 h-3 mr-1" />
-                            Подключено
-                          </Badge>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-start gap-3">
-                        <div className={`w-14 h-14 rounded-xl ${platform.color} flex items-center justify-center text-3xl shadow-lg`}>
-                          {platform.icon}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{platform.name}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {platform.description}
-                          </p>
-                        </div>
-                      </div>
+          <div className='rounded-xl'>
+            <div className="pb-1 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Доступные площадки</span>
+              </div>
+              
+              {/* Search Input */}
+              <div className="relative rounded-3xl">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="поиск..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 max-w-max pr-4 rounded-3xl cursor-default"
+                />
+              </div>
+            </div>
+            
+            <div className="p-0">
+              {filteredPlatforms.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-muted-foreground">
+                    Площадка "{searchQuery}" не найдена
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {filteredPlatforms.map((platform) => {
+                    const connected = isConnected(platform.id);
+                    return (
+                      <div
+                        key={platform.id}
+                        className={`relative rounded-none border-b border-white/5 p-2 transition-all ${
+                          connected ? 'bg-muted/20 border-primary/50' : 'hover:border-primary/50'
+                        }`}
+                      > 
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0`}>
+                              {renderIcon(platform.icon)}
+                            </div>
+                            <h3 className="font-semibold text-sm">{platform.name}</h3>
+                          </div>
 
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            className="w-full gap-2" 
-                            disabled={connected}
-                            onClick={() => setSelectedPlatform(platform)}
-                          >
-                            {connected ? (
-                              <>
-                                <Check className="w-4 h-4" />
-                                Подключено
-                              </>
-                            ) : (
-                              <>
-                                <Plus className="w-4 h-4" />
-                                Подключить
-                              </>
-                            )}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <span className="text-2xl">{platform.icon}</span>
-                              Подключить {platform.name}
-                            </DialogTitle>
-                            <DialogDescription>
-                              Введите данные для подключения к {platform.name}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4 py-4">
-                            {platform.fields.map((field) => (
-                              <div key={field.name} className="space-y-2">
-                                <Label htmlFor={field.name}>{field.label}</Label>
-                                <Input
-                                  id={field.name}
-                                  type={field.type}
-                                  placeholder={field.placeholder}
-                                  value={formData[field.name] || ''}
-                                  onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
-                                />
-                              </div>
-                            ))}
-                            <div className="flex gap-2 pt-4">
-                              <Button
-                                variant="outline"
-                                className="flex-1"
-                                onClick={() => {
-                                  setSelectedPlatform(null);
-                                  setFormData({});
-                                }}
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                className="gap-2 cursor-pointer" 
+                                disabled={connected}
+                                onClick={() => setSelectedPlatform(platform)}
                               >
-                                Отмена
-                              </Button>
-                              <Button
-                                className="flex-1 gap-2"
-                                onClick={handleConnect}
-                                disabled={connecting}
-                              >
-                                {connecting ? (
+                                {connected ? (
                                   <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Подключение...
+                                    <Check className="w-4 h-4" />
                                   </>
                                 ) : (
                                   <>
-                                    <ExternalLink className="w-4 h-4" />
-                                    Подключить
+                                    <Plus className="w-4 h-4" />
                                   </>
                                 )}
                               </Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Info */}
-          {/* <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <Settings className="w-8 h-8 text-blue-500 flex-shrink-0 mt-1" />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">Как подключить площадку?</h3>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p className="flex items-start gap-2">
-                      <span className="font-bold text-blue-500">1.</span>
-                      <span>Выберите социальную сеть из списка доступных площадок</span>
-                    </p>
-                    <p className="flex items-start gap-2">
-                      <span className="font-bold text-blue-500">2.</span>
-                      <span>Получите API ключи в настройках вашей социальной сети</span>
-                    </p>
-                    <p className="flex items-start gap-2">
-                      <span className="font-bold text-blue-500">3.</span>
-                      <span>Введите данные в форму подключения</span>
-                    </p>
-                    <p className="flex items-start gap-2">
-                      <span className="font-bold text-blue-500">4.</span>
-                      <span>После подключения контент будет автоматически публиковаться через n8n</span>
-                    </p>
-                  </div>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                  <div className="w-8 h-8">
+                                    {selectedPlatform && renderIcon(selectedPlatform.icon, "w-8 h-8")}
+                                  </div>
+                                  Подключить {selectedPlatform?.name}
+                                </DialogTitle>
+                                <DialogDescription>
+                                  Введите данные для подключения к {platform.name}
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4">
+                                {platform.fields.map((field) => (
+                                  <div key={field.name} className="space-y-2">
+                                    <Label htmlFor={field.name}>{field.label}</Label>
+                                    <Input
+                                      id={field.name}
+                                      type={field.type}
+                                      placeholder={field.placeholder}
+                                      value={formData[field.name] || ''}
+                                      onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+                                    />
+                                  </div>
+                                ))}
+                                <div className="flex gap-2 pt-4">
+                                  <Button
+                                    variant="outline"
+                                    className="flex-1"
+                                    onClick={() => {
+                                      setSelectedPlatform(null);
+                                      setFormData({});
+                                    }}
+                                  >
+                                    Отмена
+                                  </Button>
+                                  <Button
+                                    className="flex-1 gap-2"
+                                    onClick={handleConnect}
+                                    disabled={connecting}
+                                  >
+                                    {connecting ? (
+                                      <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Подключение...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ExternalLink className="w-4 h-4" />
+                                        Подключить
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            </CardContent>
-          </Card> */}
+              )}
+            </div>
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

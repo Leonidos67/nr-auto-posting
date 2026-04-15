@@ -34,7 +34,6 @@ const PlatformConnectionSchema = new Schema<IPlatformConnection>(
         'tiktok',
         'instagram-reels',
         'pinterest',
-        'rutube',
         'telegram',
         'vk',
       ],
