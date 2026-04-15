@@ -49,6 +49,7 @@ export default function GenerateContentPage() {
   const [details, setDetails] = useState('');
   const [generating, setGenerating] = useState(false);
   const [generatedBrief, setGeneratedBrief] = useState('');
+  const [generatedContents, setGeneratedContents] = useState<any[]>([]);
   const [step, setStep] = useState<'brief' | 'generating' | 'ready'>('brief');
 
   useEffect(() => {
@@ -89,14 +90,34 @@ export default function GenerateContentPage() {
     setStep('generating');
 
     try {
-      // Имитация генерации ТЗ через GPT
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Вызываем AI сервис для генерации контента
+      const response = await fetch(`/api/factory/projects/${projectId}/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topic,
+          details,
+          count: 1,
+        }),
+      });
 
-      const brief = `# ТЕХНИЧЕСКОЕ ЗАДАНИЕ
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Ошибка генерации');
+      }
 
-## Тема: ${topic}
+      const data = await response.json();
+      
+      if (data.contents && data.contents.length > 0) {
+        const content = data.contents[0];
+        
+        const brief = `# ТЕХНИЧЕСКОЕ ЗАДАНИЕ
 
-${details ? `## Дополнительные детали:\n${details}\n` : ''}
+## Тема: ${content.title}
+
+${content.description ? `## Описание:\n${content.description}\n` : ''}
 
 ## Профиль стиля:
 - Настроение: ${project?.styleProfile?.mood || 'modern'}
@@ -110,24 +131,28 @@ ${details ? `## Дополнительные детали:\n${details}\n` : ''}
 - Площадки: ${(project?.settings?.targetPlatforms || []).join(', ')}
 
 ## Сценарий:
-1. Вступление (5 сек) - захват внимания
-2. Основной контент (40 сек) - раскрытие темы
-3. Призыв к действию (10 сек) - engagement
-4. Завершение (5 сек) - брендинг
+${content.script || '1. Вступление (5 сек) - захват внимания\n2. Основной контент (40 сек) - раскрытие темы\n3. Призыв к действию (10 сек) - engagement\n4. Завершение (5 сек) - брендинг'}
 
-## Промпт для генерации изображений:
-${topic}, ${project?.styleProfile?.mood} mood, ${project?.styleProfile?.visualStyle} style, colors: ${project?.styleProfile?.colors?.join(', ')}, professional quality, 4k
+## Теги:
+${(content.tags || []).join(', ')}
+
+## Промпт для генерации видео:
+${content.videoPrompt || `${topic}, ${project?.styleProfile?.mood} mood, ${project?.styleProfile?.visualStyle} style, colors: ${project?.styleProfile?.colors?.join(', ')}, professional quality, 4k`}
 
 ## Музыка:
 Стиль: ${project?.styleProfile?.musicStyle || 'upbeat'}
 Темп: ${project?.styleProfile?.tempo || 'medium'}
 Настроение: ${project?.styleProfile?.mood || 'modern'}`;
 
-      setGeneratedBrief(brief);
-      setStep('ready');
-    } catch (error) {
+        setGeneratedBrief(brief);
+        setGeneratedContents(data.contents);
+        setStep('ready');
+      } else {
+        throw new Error('Контент не был сгенерирован');
+      }
+    } catch (error: any) {
       console.error('Error generating brief:', error);
-      alert('Ошибка при генерации ТЗ');
+      alert(error.message || 'Ошибка при генерации ТЗ');
       setStep('brief');
     } finally {
       setGenerating(false);
@@ -138,42 +163,30 @@ ${topic}, ${project?.styleProfile?.mood} mood, ${project?.styleProfile?.visualSt
     setGenerating(true);
     
     try {
-      // Обновляем статус проекта
-      await fetch(`/api/factory/projects/${projectId}`, {
-        method: 'PATCH',
+      // Запускаем генерацию контента через API
+      const response = await fetch(`/api/factory/projects/${projectId}/generate`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: 'generating',
+          topic,
+          count: 1,
         }),
       });
 
-      // Здесь будет запуск генерации контента
-      // 1. Генерация изображений через Stability AI
-      // 2. Генерация видео из изображений
-      // 3. Генерация/подбор музыки
-      // 4. Монтаж видео
-      // 5. Отправка на n8n webhook для постинга
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Ошибка генерации');
+      }
+
+      const data = await response.json();
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Обновляем статус
-      await fetch(`/api/factory/projects/${projectId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'ready',
-        }),
-      });
-
       alert('Контент готов к публикации!');
       router.push(`/app/factory/${projectId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating content:', error);
-      alert('Ошибка при генерации контента');
+      alert(error.message || 'Ошибка при генерации контента');
     } finally {
       setGenerating(false);
     }

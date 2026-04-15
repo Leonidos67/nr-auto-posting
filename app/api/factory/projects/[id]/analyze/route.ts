@@ -3,6 +3,7 @@ import { verifyToken } from '@/lib/auth';
 import connectMongoDB from '@/lib/mongodb';
 import StyleReference from '@/models/StyleReference';
 import ContentProject from '@/models/ContentProject';
+import { getAIService } from '@/lib/ai-services';
 
 // POST /api/factory/projects/[id]/analyze
 export async function POST(
@@ -31,70 +32,89 @@ export async function POST(
       userId: payload.userId,
     });
 
-    if (references.length < 10) {
+    if (references.length === 0) {
       return NextResponse.json(
-        { error: 'Минимум 10 референсов требуется для анализа' },
+        { error: 'Загрузите хотя бы один референс для анализа' },
         { status: 400 }
       );
     }
 
-    // Имитация AI анализа (в реальном проекте здесь будет вызов AI API)
-    console.log('Анализ стиля для проекта:', resolvedParams.id);
-    console.log('Количество референсов:', references.length);
+    // Обновляем статус проекта
+    const project = await ContentProject.findByIdAndUpdate(
+      resolvedParams.id,
+      { status: 'analyzing' },
+      { new: true }
+    );
 
-    // Анализируем каждый референс
+    // Определяем какой AI сервис использовать
+    // ПРИОРИТЕТ: OpenRouter (работает в РФ), потом OpenAI
+    const aiProvider = process.env.OPENROUTER_API_KEY ? 'openrouter' : 'openai';
+    const aiService = getAIService(aiProvider);
+
+    console.log(`Анализ стиля для проекта: ${resolvedParams.id}`);
+    console.log(`Количество референсов: ${references.length}`);
+    console.log(`Используемый AI провайдер: ${aiProvider}`);
+    console.log(`API ключ есть: ${aiProvider === 'openrouter' ? process.env.OPENROUTER_API_KEY?.substring(0, 10) + '...' : process.env.OPENAI_API_KEY?.substring(0, 10) + '...'}`);
+    
+    if (!process.env.OPENROUTER_API_KEY && !process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { error: 'Не настроен API ключ! Добавьте OPENROUTER_API_KEY в .env.local' },
+        { status: 500 }
+      );
+    }
+
+    // Подготавливаем данные референсов для AI анализа
+    const referencesData = references.map(ref => ({
+      fileUrl: ref.fileUrl,
+      fileName: ref.fileName,
+      fileType: ref.fileType
+    }));
+
+    console.log('References data prepared:', referencesData.length, 'files');
+    console.log('First reference fileUrl starts with:', referencesData[0]?.fileUrl?.substring(0, 50));
+
+    // Анализируем стиль с помощью AI
+    console.log('Calling AI service...');
+    let styleAnalysis;
+    try {
+      styleAnalysis = await aiService.analyzeStyle(referencesData);
+    } catch (aiError: any) {
+      console.error('AI analysis failed:', aiError.message);
+      return NextResponse.json(
+        { 
+          error: 'AI анализ не удался. Убедитесь что:\n1. API ключ настроен в .env.local\n2. Загружены изображения (не видео/audio)\n3. Изображения в формате base64 или URL',
+          details: aiError.message 
+        },
+        { status: 500 }
+      );
+    }
+    console.log('AI Analysis result:', JSON.stringify(styleAnalysis, null, 2));
+
+    // Обновляем каждый референс с результатами анализа
     for (const ref of references) {
-      ref.analysisStatus = 'analyzing';
-      await ref.save();
-
-      // Имитация анализа
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Генерируем случайный профиль стиля
-      const moodOptions = ['dynamic', 'calm', 'energetic', 'professional', 'creative', 'modern'];
-      const tempoOptions: Array<'slow' | 'medium' | 'fast'> = ['slow', 'medium', 'fast'];
-      const colorPalettes = [
-        ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'],
-        ['#667eea', '#764ba2', '#f093fb', '#f5576c'],
-        ['#4facfe', '#00f2fe', '#43e97b', '#38f9d7'],
-      ];
-
       ref.analysisStatus = 'completed';
       ref.analysisResult = {
-        dominantColors: colorPalettes[Math.floor(Math.random() * colorPalettes.length)],
-        mood: moodOptions[Math.floor(Math.random() * moodOptions.length)],
-        tempo: tempoOptions[Math.floor(Math.random() * tempoOptions.length)],
-        visualStyle: 'modern',
-        objects: ['product', 'lifestyle', 'nature'],
-        scene: 'urban',
+        dominantColors: styleAnalysis.dominantColors,
+        mood: styleAnalysis.mood,
+        tempo: styleAnalysis.tempo,
+        visualStyle: styleAnalysis.visualStyle,
+        objects: styleAnalysis.objects,
+        scene: styleAnalysis.scene,
       };
-
       await ref.save();
     }
 
-    // Создаем общий профиль стиля для проекта
-    const allColors = references
-      .filter(r => r.analysisResult?.dominantColors)
-      .flatMap(r => r.analysisResult!.dominantColors);
-    
-    const uniqueColors = [...new Set(allColors)].slice(0, 6);
-    const mostCommonMood = references
-      .filter(r => r.analysisResult?.mood)
-      .map(r => r.analysisResult!.mood)
-      .reduce((a, b, i, arr) => {
-        return arr.filter(v => v === a).length > arr.filter(v => v === b).length ? a : b;
-      }, '');
-
-    const project = await ContentProject.findByIdAndUpdate(
+    // Обновляем профиль стиля проекта
+    const updatedProject = await ContentProject.findByIdAndUpdate(
       resolvedParams.id,
       {
-        status: 'analyzing',
+        status: 'ready',
         styleProfile: {
-          colors: uniqueColors,
-          mood: mostCommonMood || 'modern',
-          tempo: 'medium',
-          musicStyle: 'upbeat',
-          visualStyle: 'contemporary',
+          colors: styleAnalysis.dominantColors,
+          mood: styleAnalysis.mood,
+          tempo: styleAnalysis.tempo,
+          musicStyle: styleAnalysis.musicStyle,
+          visualStyle: styleAnalysis.visualStyle,
         },
       },
       { new: true }
@@ -102,7 +122,7 @@ export async function POST(
 
     return NextResponse.json({
       message: 'Анализ завершен',
-      styleProfile: project?.styleProfile,
+      styleProfile: updatedProject?.styleProfile,
     });
   } catch (error: any) {
     console.error('Error analyzing references:', error);

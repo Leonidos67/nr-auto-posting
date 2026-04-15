@@ -146,10 +146,8 @@ export default function UploadReferencesPage() {
 
       setReferences(prev => [...prev, ...uploadedFiles]);
       
-      // Автоматически запускаем анализ если загрузили 10+ файлов
-      if (references.length + uploadedFiles.length >= 10) {
-        setAnalyzing(true);
-      }
+      // Обновляем проект после загрузки
+      fetchProject();
     } catch (error) {
       console.error('Error uploading files:', error);
       alert('Ошибка при загрузке файлов');
@@ -220,7 +218,7 @@ export default function UploadReferencesPage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const canAnalyze = references.length >= 10;
+  const canAnalyze = references.length > 0;
 
   if (loading) {
     return (
@@ -272,9 +270,9 @@ export default function UploadReferencesPage() {
                   <div className="flex gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <div className={`w-3 h-3 rounded-full ${canAnalyze ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                      <span>{references.length}/10 минимум</span>
+                      <span>{references.length} файлов загружено</span>
                     </div>
-                    <span>Максимум: 30 файлов</span>
+                    <span>Рекомендуется: 10+ файлов</span>
                   </div>
                 </div>
               </div>
@@ -327,9 +325,9 @@ export default function UploadReferencesPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>Загруженные файлы ({references.length}/10)</span>
+                  <span>Загруженные файлы ({references.length})</span>
                   <div className="flex gap-2">
-                    {references.length >= 10 && (
+                    {canAnalyze && (
                       <Button
                         onClick={handleAnalyzeReferences}
                         disabled={analyzing}
@@ -348,30 +346,8 @@ export default function UploadReferencesPage() {
                         )}
                       </Button>
                     )}
-                    {references.length > 0 && references.length < 10 && (
-                      <Button
-                        onClick={() => router.push(`/app/factory/${projectId}/generate`)}
-                        variant="outline"
-                        className="gap-2"
-                      >
-                        Продолжить без анализа →
-                      </Button>
-                    )}
                   </div>
                 </CardTitle>
-                {references.length < 10 && (
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">
-                        Загружено {references.length} из 10 рекомендуемых файлов
-                      </span>
-                      <span className="font-medium text-primary">
-                        Нужно ещё {10 - references.length}
-                      </span>
-                    </div>
-                    <Progress value={(references.length / 10) * 100} className="h-2" />
-                  </div>
-                )}
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -433,7 +409,7 @@ export default function UploadReferencesPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    {references.length >= 10 ? (
+                    {canAnalyze ? (
                       <>
                         <h3 className="text-lg font-semibold mb-1">
                           Готово к анализу!
@@ -445,18 +421,17 @@ export default function UploadReferencesPage() {
                     ) : (
                       <>
                         <h3 className="text-lg font-semibold mb-1">
-                          Продолжайте загрузку или перейдите к генерации
+                          Загрузите файлы для анализа
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          Загружено {references.length} из 10 рекомендуемых файлов. 
-                          Для лучшего результата загрузите ещё {10 - references.length} файлов,
-                          или начните генерацию контента без анализа стиля.
+                          Загрузите хотя бы один файл, чтобы начать анализ стиля.
+                          Для лучшего результата рекомендуется 10+ файлов.
                         </p>
                       </>
                     )}
                   </div>
                   <div className="flex gap-2">
-                    {references.length >= 10 && (
+                    {canAnalyze && (
                       <Button
                         onClick={handleAnalyzeReferences}
                         size="lg"
@@ -469,10 +444,10 @@ export default function UploadReferencesPage() {
                     <Button
                       onClick={() => router.push(`/app/factory/${projectId}/generate`)}
                       size="lg"
-                      variant={references.length >= 10 ? "outline" : "default"}
+                      variant={canAnalyze ? "outline" : "default"}
                       className="gap-2"
                     >
-                      {references.length >= 10 ? 'Пропустить анализ' : 'Перейти к генерации'} →
+                      Перейти к генерации →
                     </Button>
                   </div>
                 </div>

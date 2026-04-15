@@ -31,6 +31,7 @@ import {
   TestTube,
   Zap,
   LifeBuoy,
+  Send,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -426,6 +427,30 @@ export default function ProjectSettingsPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Publish Action */}
+          {project.status === 'ready' && (
+            <Card className="border-primary/50 bg-primary/5">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg">Контент готов к публикации</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Опубликуйте контент на подключенных платформах
+                    </p>
+                  </div>
+                  <Button 
+                    size="lg" 
+                    className="gap-2"
+                    onClick={() => router.push(`/app/factory/${projectId}/publish`)}
+                  >
+                    <Send className="w-5 h-5" />
+                    Опубликовать
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Project Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
