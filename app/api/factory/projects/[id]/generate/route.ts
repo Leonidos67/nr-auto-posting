@@ -46,7 +46,7 @@ export async function POST(
 
     // Получаем данные из запроса
     const body = await request.json();
-    const { topic, count = 1 } = body;
+    const { topic, count = 1, brief } = body;
 
     // Обновляем статус проекта
     project.status = 'generating';
@@ -59,13 +59,26 @@ export async function POST(
     console.log(`Генерация контента для проекта: ${resolvedParams.id}`);
     console.log(`Тема: ${topic || 'не указана'}`);
     console.log(`Количество: ${count}`);
+    console.log(`Используется ТЗ: ${brief ? 'да' : 'нет'}`);
 
     // Генерируем контент
     const generatedContents = [];
     
     for (let i = 0; i < count; i++) {
-      const content = await aiService.generateContent(project.styleProfile, topic);
-      generatedContents.push(content);
+      // Если есть ТЗ, используем его для более точной генерации
+      if (brief) {
+        const content = await aiService.generateContent(
+          { 
+            ...project.styleProfile,
+            brief: brief // Передаем ТЗ в профиль для контекста
+          }, 
+          topic
+        );
+        generatedContents.push(content);
+      } else {
+        const content = await aiService.generateContent(project.styleProfile, topic);
+        generatedContents.push(content);
+      }
     }
 
     // Обновляем проект

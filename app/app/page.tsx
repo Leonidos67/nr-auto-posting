@@ -193,7 +193,7 @@ export default function Page() {
                       onMouseLeave={() => {
                         item.iconRef.current?.stopAnimation?.();
                       }}
-                      className="aspect-video rounded-xl bg-muted/50 border-2 border-transparent hover:border-primary/50 transition-all duration-300 hover:shadow-lg cursor-pointer group flex flex-col items-center justify-center gap-4 p-2 relative overflow-hidden"
+                      className="aspect-video rounded-xl bg-card border-2 border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:bg-card/80 cursor-pointer group flex flex-col items-center justify-center gap-4 p-2 relative overflow-hidden"
                       disabled={loadingCards[item.id]}
                     >
                       {loadingCards[item.id] ? (
@@ -261,8 +261,8 @@ export default function Page() {
           </div>
 
           {/* Recent Projects Block */}
-          <div className="rounded-xl bg-muted/50 min-h-[300px]">
-            <div className="p-4 border-b border-border">
+          <div className="rounded-xl bg-card border border-border/50">
+            <div className="p-4 border-b border-border/50">
               <span className="text-sm font-medium">Недавние проекты</span>
             </div>
             <div className="flex items-center justify-center min-h-[240px]">

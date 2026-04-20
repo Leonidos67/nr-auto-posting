@@ -8,8 +8,25 @@ const publicRoutes = ['/login', '/register'];
 const authRoutes = ['/login', '/register'];
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const pathname = request.nextUrl.pathname;
   const token = request.cookies.get('auth-token')?.value;
+
+  // Redirect old /app/factory routes to /ai-studio (301 permanent redirect)
+  if (pathname.startsWith('/app/factory/new')) {
+    const newUrl = new URL('/ai-studio/new', request.url);
+    return NextResponse.redirect(newUrl, 301);
+  }
+  
+  if (pathname.startsWith('/app/factory/')) {
+    const rest = pathname.split('/app/factory')[1];
+    const newUrl = new URL(`/ai-studio${rest}`, request.url);
+    return NextResponse.redirect(newUrl, 301);
+  }
+
+  if (pathname === '/app/factory') {
+    const newUrl = new URL('/ai-studio', request.url);
+    return NextResponse.redirect(newUrl, 301);
+  }
 
   // Check if the route is an auth route (login/register)
   const isAuthRoute = authRoutes.includes(pathname);
@@ -32,14 +49,8 @@ export function middleware(request: NextRequest) {
 // Configure which routes should be handled by middleware
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (auth API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
+    '/app/factory/:path*',
+    '/app/factory',
     '/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

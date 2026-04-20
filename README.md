@@ -12,12 +12,6 @@ SaaS-платформа для автоматизации создания и п
 - **Автоматическая публикация**: Публикация на YouTube, TikTok, Instagram, VK, Telegram, Pinterest
 - **Мульти-платформенность**: Поддержка OpenRouter, OpenAI и Stability AI
 
-## Built with v0
-
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
-
-[Continue working on v0 →](https://v0.app/chat/projects/prj_wBP8rrnJsodHena2cUW7gxPwxNOD)
-
 ## Getting Started
 
 ### 1. Настройка API ключей
@@ -73,6 +67,23 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 - Pinterest
 - Telegram
 - VK
+
+## Deployment
+
+### Deploy to Vercel
+
+The easiest way to deploy is using [Vercel](https://vercel.com/):
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=YOUR_GIT_REPO_URL)
+
+For detailed deployment instructions, see [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)
+
+### Manual Deployment
+
+1. Push your code to a Git repository
+2. Connect to Vercel, Netlify, or any Next.js-compatible host
+3. Configure environment variables
+4. Deploy
 
 ## Learn More
 

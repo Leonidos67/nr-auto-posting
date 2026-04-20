@@ -505,6 +505,334 @@ export class OpenAIService {
       throw error;
     }
   }
+
+  // Интеллектуальная генерация ТЗ с глубоким анализом
+  async generateBrief(
+    topic: string,
+    details: string,
+    styleProfile: any,
+    projectSettings: any,
+    customStructure?: any // Кастомная структура ТЗ
+  ): Promise<any> {
+    try {
+      console.log('OpenAI: Starting intelligent brief generation');
+      console.log('Topic:', topic);
+      console.log('Style profile:', JSON.stringify(styleProfile));
+      console.log('Custom structure:', customStructure ? 'YES' : 'NO');
+
+      // Формируем структуру на основе customStructure или используем дефолтную
+      let structureDefinition = '';
+      if (customStructure && Array.isArray(customStructure)) {
+        structureDefinition = customStructure.map((section: any) => {
+          const subItems = section.subItems && section.subItems.length > 0
+            ? section.subItems.map((sub: any) => `    - ${sub.id}: "${sub.title}"`).join('\n')
+            : '    - (будет сгенерировано AI)';
+          return `  ${section.id} (${section.title}):
+${subItems}`;
+        }).join('\n\n');
+      }
+
+      const systemPrompt = `Ты — профессиональный креативный директор и стратег content-маркетинга с 15-летним опытом создания viral контента.
+
+Твоя задача — создать ОЧЕНЬ ДЕТАЛЬНОЕ И РАЗВЕРНУТОЕ ТЕХНИЧЕСКОЕ ЗАДАНИЕ для генерации контента.
+
+ВАЖНО: Генерируй МАКСИМАЛЬНО подробный и развернутый текст для каждого поля. Каждый ответ должен быть 3-5 предложений минимум. Пиши подробно, детально, с примерами и объяснениями.
+
+ТЫ ДОЛЖЕН РАЗМЫШЛЯТЬ АНАЛИТИЧЕСКИ, не использовать шаблоны. Каждый ответ должен быть уникальным и адаптированным под конкретный проект.
+
+СТРУКТУРА РАЗМЫШЛЕНИЙ:
+1. Проанализируй тему — что действительно важно для аудитории?
+2. Определи эмоциональный крючок — что зацепит зрителя?
+3. Продумай структуру нарратива — как удержать внимание?
+4. Адаптируй под стиль проекта — как сохранить бренд?
+5. Выбери оптимальный формат — что работает лучше всего?
+6. Продумай практическую реализацию — как это снять/создать?`;
+
+      const userPrompt = `
+КОНТЕКСТ ПРОЕКТА:
+${details ? `Дополнительные детали от клиента: ${details}` : ''}
+
+ПРОФИЛЬ СТИЛЯ:
+- Настроение: ${styleProfile.mood || 'не определено'}
+- Темп: ${styleProfile.tempo || 'не определено'}
+- Визуальный стиль: ${styleProfile.visualStyle || 'не определено'}
+- Цветовая палитра: ${(styleProfile.colors || []).join(', ')}
+- Музыкальный стиль: ${styleProfile.musicStyle || 'не определено'}
+
+НАСТРОЙКИ КОНТЕНТА:
+- Формат: ${projectSettings.aspectRatio || '9:16'}
+- Длительность: ${projectSettings.videoDuration || 60} секунд
+- Целевые платформы: ${(projectSettings.targetPlatforms || []).join(', ')}
+
+ТЕМА: ${topic}
+
+${customStructure ? `СТРУКТУРА ТЗ (используй ТОЛЬКО эти разделы и подпункты):
+${structureDefinition}
+
+ВАЖНО: Создай JSON ТОЛЬКО с указанными выше разделами. Каждый подпункт должен быть заполнен.` : `
+Теперь создай подробное ТЗ в формате JSON со следующей структурой:
+{
+  "analysis": {
+    "coreIdea": "главная идея и почему она сработает",
+    "targetAudience": "кто целевая аудитория и что их мотивирует",
+    "emotionalHook": "эмоциональный крючок для удержания внимания",
+    "uniqueAngle": "уникальный ракурс подачи темы"
+  },
+  "content": {
+    "title": "заголовок контента",
+    "concept": "общая концепция и подход",
+    "narrativeStructure": "структура повествования по таймкодам",
+    "keyMessages": ["ключевое сообщение 1", "ключевое сообщение 2"],
+    "callToAction": "призыв к действию"
+  },
+  "visual": {
+    "style": "визуальный стиль с учетом профиля",
+    "colorUsage": "как использовать цветовую палитру",
+    "keyScenes": [
+      {"time": "0-5s", "description": "описание сцены", "purpose": "цель"}
+    ],
+    "transitions": "тип переходов между сценами",
+    "textOverlay": "текстовые элементы на экране"
+  },
+  "audio": {
+    "musicStyle": "конкретный стиль музыки",
+    "soundDesign": "звуковые эффекты и атмосфера",
+    "voiceover": "нужен ли voiceover и какой стиль"
+  },
+  "platforms": {
+    "adaptations": {
+      "platform1": "адаптация под конкретную платформу"
+    },
+    "hashtags": ["#хештег1", "#хештег2"],
+    "caption": "текст поста для публикации"
+  },
+  "production": {
+    "videoPrompt": "детальный промпт для генерации видео",
+    "imagePrompt": "промпт для генерации обложки/превью",
+  }
+}`}
+
+ВАЖНО:
+1. Каждый раздел должен быть уникальным и адаптированным под эту конкретную тему
+2. Не используй общие фразы — будь конкретным
+3. Проанализируй психологию восприятия
+4. Предложи неочевидные, но эффективные решения
+5. Думай как стратег, а не как исполнитель
+6. ${customStructure ? 'Используй ТОЛЬКО указанные разделы и подпункты' : 'Следуй указанной структуре JSON'}`;
+
+      const response = await axios.post(
+        `${this.baseUrl}/chat/completions`,
+        {
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: userPrompt
+            }
+          ],
+          response_format: { type: 'json_object' },
+          max_tokens: 3000,
+          temperature: 0.8
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('OpenAI brief generation response status:', response.status);
+      
+      const rawContent = response.data.choices[0].message.content;
+      console.log('Raw brief response:', rawContent);
+      
+      // Парсим JSON ответ
+      let result;
+      try {
+        const cleaned = rawContent.replace(/```json\n?/g, '').replace(/```/g, '').trim();
+        result = JSON.parse(cleaned);
+      } catch (parseError) {
+        console.error('Failed to parse brief AI response as JSON:', parseError);
+        throw new Error('AI did not return valid JSON for brief');
+      }
+      
+      console.log('✅ Intelligent brief generated successfully');
+      
+      return result;
+    } catch (error: any) {
+      console.error('❌ Error generating brief with OpenAI:', error.message);
+      if (error.response) {
+        console.error('OpenAI API error:', error.response.status, JSON.stringify(error.response.data));
+        
+        // Если OpenAI недоступен, пробуем через OpenRouter
+        if (error.response.status === 403 || error.response.status === 401) {
+          console.log('⚠️ OpenAI недоступен, используем OpenRouter как fallback...');
+          return await this.generateBriefViaOpenRouter(
+            topic,
+            details,
+            styleProfile,
+            projectSettings,
+            customStructure
+          );
+        }
+      }
+      throw error;
+    }
+  }
+
+  // Fallback метод через OpenRouter
+  private async generateBriefViaOpenRouter(
+    topic: string,
+    details: string,
+    styleProfile: any,
+    projectSettings: any,
+    customStructure?: any
+  ): Promise<any> {
+    try {
+      const openRouterApiKey = process.env.OPENROUTER_API_KEY || '';
+      const openRouterBaseUrl = 'https://openrouter.ai/api/v1';
+
+      const systemPrompt = `Ты — профессиональный креативный директор и стратег content-маркетинга с 15-летним опытом создания viral контента.
+
+Твоя задача — создать ОЧЕНЬ ДЕТАЛЬНОЕ И РАЗВЕРНУТОЕ ТЕХНИЧЕСКОЕ ЗАДАНИЕ для генерации контента.
+
+ВАЖНО: Генерируй МАКСИМАЛЬНО подробный и развернутый текст для каждого поля. Каждый ответ должен быть 3-5 предложений минимум. Пиши подробно, детально, с примерами и объяснениями.
+
+ТЫ ДОЛЖЕН РАЗМЫШЛЯТЬ АНАЛИТИЧЕСКИ, не использовать шаблоны. Каждый ответ должен быть уникальным и адаптированным под конкретный проект.
+
+СТРУКТУРА РАЗМЫШЛЕНИЙ:
+1. Проанализируй тему — что действительно важно для аудитории?
+2. Определи эмоциональный крючок — что зацепит зрителя?
+3. Продумай структуру нарратива — как удержать внимание?
+4. Адаптируй под стиль проекта — как сохранить бренд?
+5. Выбери оптимальный формат — что работает лучше всего?
+6. Продумай практическую реализацию — как это снять/создать?`;
+
+      const userPrompt = `
+КОНТЕКСТ ПРОЕКТА:
+${details ? `Дополнительные детали от клиента: ${details}` : ''}
+
+ПРОФИЛЬ СТИЛЯ:
+- Настроение: ${styleProfile.mood || 'не определено'}
+- Темп: ${styleProfile.tempo || 'не определено'}
+- Визуальный стиль: ${styleProfile.visualStyle || 'не определено'}
+- Цветовая палитра: ${(styleProfile.colors || []).join(', ')}
+- Музыкальный стиль: ${styleProfile.musicStyle || 'не определено'}
+
+НАСТРОЙКИ КОНТЕНТА:
+- Формат: ${projectSettings.aspectRatio || '9:16'}
+- Длительность: ${projectSettings.videoDuration || 60} секунд
+- Целевые платформы: ${(projectSettings.targetPlatforms || []).join(', ')}
+
+ТЕМА: ${topic}
+
+Теперь создай подробное ТЗ в формате JSON со следующей структурой:
+{
+  "analysis": {
+    "coreIdea": "главная идея и почему она сработает",
+    "targetAudience": "кто целевая аудитория и что их мотивирует",
+    "emotionalHook": "эмоциональный крючок для удержания внимания",
+    "uniqueAngle": "уникальный ракурс подачи темы"
+  },
+  "content": {
+    "title": "заголовок контента",
+    "concept": "общая концепция и подход",
+    "narrativeStructure": "структура повествования по таймкодам",
+    "keyMessages": ["ключевое сообщение 1", "ключевое сообщение 2"],
+    "callToAction": "призыв к действию"
+  },
+  "visual": {
+    "style": "визуальный стиль с учетом профиля",
+    "colorUsage": "как использовать цветовую палитру",
+    "keyScenes": [
+      {"time": "0-5s", "description": "описание сцены", "purpose": "цель"}
+    ],
+    "transitions": "тип переходов между сценами",
+    "textOverlay": "текстовые элементы на экране"
+  },
+  "audio": {
+    "musicStyle": "конкретный стиль музыки",
+    "soundDesign": "звуковые эффекты и атмосфера",
+    "voiceover": "нужен ли voiceover и какой стиль"
+  },
+  "platforms": {
+    "adaptations": {
+      "platform1": "адаптация под конкретную платформу"
+    },
+    "hashtags": ["#хештег1", "#хештег2"],
+    "caption": "текст поста для публикации"
+  },
+  "production": {
+    "videoPrompt": "детальный промпт для генерации видео",
+    "imagePrompt": "промпт для генерации обложки/превью"
+  }
+}
+
+ВАЖНО:
+1. Каждый раздел должен быть уникальным и адаптированным под эту конкретную тему
+2. Не используй общие фразы — будь конкретным
+3. Проанализируй психологию восприятия
+4. Предложи неочевидные, но эффективные решения
+5. Думай как стратег, а не как исполнитель`;
+
+      const response = await axios.post(
+        `${openRouterBaseUrl}/chat/completions`,
+        {
+          model: 'openai/gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: userPrompt
+            }
+          ],
+          response_format: { type: 'json_object' },
+          max_tokens: 3000,
+          temperature: 0.8
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${openRouterApiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+            'X-Title': 'Video SaaS Platform'
+          }
+        }
+      );
+
+      console.log('OpenRouter brief generation response status:', response.status);
+      
+      const rawContent = response.data.choices[0].message.content;
+      console.log('Raw brief response from OpenRouter:', rawContent);
+      
+      let result;
+      try {
+        const cleaned = rawContent.replace(/```json\n?/g, '').replace(/```/g, '').trim();
+        result = JSON.parse(cleaned);
+      } catch (parseError) {
+        console.error('Failed to parse brief AI response as JSON:', parseError);
+        throw new Error('AI did not return valid JSON for brief');
+      }
+      
+      console.log('✅ Intelligent brief generated successfully via OpenRouter');
+      
+      return result;
+    } catch (error: any) {
+      console.error('❌ Error generating brief with OpenRouter:', error.message);
+      if (error.response) {
+        console.error('OpenRouter API error:', error.response.status, JSON.stringify(error.response.data));
+      }
+      throw error;
+    }
+  }
 }
 
 // Фабрика для получения нужного AI сервиса

@@ -151,7 +151,7 @@ export default function GenerateContentPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const params = useParams();
-  const projectId = params?.id as string;
+  const projectId = params?.projectId as string;
   
   const [project, setProject] = useState<ContentProject | null>(null);
   const [allProjects, setAllProjects] = useState<ContentProject[]>([]);
@@ -558,7 +558,7 @@ export default function GenerateContentPage() {
       const data = await response.json();
       
       alert('Контент готов к публикации!');
-      router.push(`/app/factory/${projectId}`);
+      router.push(`/ai-studio/${projectId}`);
     } catch (error: any) {
       console.error('Error generating content:', error);
       alert(error.message || 'Ошибка при генерации контента');
@@ -580,9 +580,6 @@ export default function GenerateContentPage() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar user={user} onLogout={handleLogout} />
-      <SidebarInset className="overflow-x-hidden">
         <div className="flex-1 p-4 space-y-4">
           {/* Header */}
           <div className="flex items-center gap-4">
@@ -634,7 +631,7 @@ export default function GenerateContentPage() {
                     .map((p) => (
                       <DropdownMenuItem
                         key={p._id}
-                        onClick={() => router.push(`/app/factory/${p._id}/generate`)}
+                        onClick={() => router.push(`/ai-studio/${p._id}/generate`)}
                         className={`flex items-start gap-2 p-2.5 rounded-lg cursor-pointer ${
                           p._id === projectId ? 'bg-muted' : 'hover:bg-muted/50'
                         }`}
@@ -663,7 +660,7 @@ export default function GenerateContentPage() {
 
                 {/* Create Project Button */}
                 <button
-                  onClick={() => router.push('/app/factory/new')}
+                  onClick={() => router.push('/ai-studio/new')}
                   className="w-full flex items-center border-t justify-center gap-2 px-4 py-2.5 rounded-lg text-white transition-colors text-sm font-medium cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
@@ -1273,7 +1270,6 @@ export default function GenerateContentPage() {
             </div>
           </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      // </div>
   );
 }

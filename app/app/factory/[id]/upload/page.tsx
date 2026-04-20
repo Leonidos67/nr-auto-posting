@@ -257,7 +257,7 @@ export default function UploadReferencesPage() {
           </div>
 
           {/* Info Card */}
-          <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
+          {/* <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <Sparkles className="w-8 h-8 text-blue-500 flex-shrink-0 mt-1" />
@@ -277,7 +277,7 @@ export default function UploadReferencesPage() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Upload Area */}
           <Card>

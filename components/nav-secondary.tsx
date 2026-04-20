@@ -27,12 +27,13 @@ export function NavSecondary({
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild size="sm">
-                <a href={item.url}>
-                  <AnimatedIcon icon={item.icon} />
-                  <span>{item.title}</span>
-                </a>
-              </SidebarMenuButton>
+              <a 
+                href={item.url}
+                className="flex items-center gap-2 px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
+              >
+                <AnimatedIcon icon={item.icon} />
+                <span>{item.title}</span>
+              </a>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

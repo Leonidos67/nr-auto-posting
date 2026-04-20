@@ -49,7 +49,7 @@ export default function PublishContentPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const params = useParams();
-  const projectId = params?.id as string;
+  const projectId = params?.projectId as string;
   
   const [project, setProject] = useState<ContentProject | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
@@ -185,16 +185,13 @@ export default function PublishContentPage() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar user={user} onLogout={handleLogout} />
-      <SidebarInset className="overflow-x-hidden">
         <div className="flex-1 p-8 min-w-4xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.push(`/app/factory/${projectId}`)}
+              onClick={() => router.push(`/ai-studio/${projectId}`)}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -343,7 +340,7 @@ export default function PublishContentPage() {
                 <div className="flex gap-3 pt-4">
                   <Button
                     variant="outline"
-                    onClick={() => router.push(`/app/factory/${projectId}`)}
+                    onClick={() => router.push(`/ai-studio/${projectId}`)}
                     className="flex-1"
                   >
                     К проекту
@@ -362,7 +359,6 @@ export default function PublishContentPage() {
             </Card>
           )}
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      // </div>
   );
 }

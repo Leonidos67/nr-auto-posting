@@ -1,7 +1,5 @@
 'use client';
 
-import { AppSidebar } from '@/components/app-sidebar';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -106,7 +104,7 @@ export default function ProjectSettingsPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const params = useParams();
-  const projectId = params?.id as string;
+  const projectId = params?.projectId as string;
   
   const [project, setProject] = useState<ContentProject | null>(null);
   const [allProjects, setAllProjects] = useState<ContentProject[]>([]);
@@ -323,7 +321,7 @@ export default function ProjectSettingsPage() {
         alert('Анализ завершен! Профиль стиля создан.');
         
         // Переход к генерации контента
-        router.push(`/app/factory/${projectId}/generate`);
+        router.push(`/ai-studio/${projectId}/generate`);
       }
     } catch (error) {
       console.error('Error analyzing references:', error);
@@ -426,7 +424,7 @@ export default function ProjectSettingsPage() {
       });
 
       if (response.ok) {
-        router.push('/app/factory');
+        router.push('/ai-studio');
       }
     } catch (error) {
       console.error('Error deleting project:', error);
@@ -477,16 +475,14 @@ export default function ProjectSettingsPage() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar user={user} onLogout={handleLogout} />
-      <SidebarInset className="overflow-x-hidden">
         <div className="flex-1">
           {/* Project Header - Vercel Style */}
           <div className="border-b">
             <div className="mx-auto">
 
+              <div className='flex items-start justify-between px-4 mb-2'></div>
               {/* Top Section */}
-              <div className="flex items-start justify-between px-4 pt-4 mb-2">
+              {/* <div className="flex items-start justify-between px-4 pt-4 mb-2">
                 <div className="flex items-start gap-2">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
@@ -505,7 +501,6 @@ export default function ProjectSettingsPage() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-80">
-                          {/* Search Input */}
                           <div className="relative">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <input
@@ -528,7 +523,6 @@ export default function ProjectSettingsPage() {
                             )}
                           </div>
 
-                          {/* Projects List */}
                           <div className="max-h-64 overflow-y-auto space-y-1 p-1">
                             {allProjects
                               .filter((p) => 
@@ -538,7 +532,7 @@ export default function ProjectSettingsPage() {
                               .map((p) => (
                                 <DropdownMenuItem
                                   key={p._id}
-                                  onClick={() => router.push(`/app/factory/${p._id}`)}
+                                  onClick={() => router.push(`/ai-studio/${p._id}`)}
                                   className={`flex items-start gap-2 p-2.5 rounded-lg cursor-pointer ${
                                     p._id === projectId ? 'bg-muted' : 'hover:bg-muted/50'
                                   }`}
@@ -565,9 +559,8 @@ export default function ProjectSettingsPage() {
                             )}
                           </div>
 
-                          {/* Create Project Button */}
                           <button
-                            onClick={() => router.push('/app/factory/new')}
+                            onClick={() => router.push('/ai-studio/new')}
                             className="w-full flex items-center border-t justify-center gap-2 px-4 py-2.5 rounded-lg text-white transition-colors text-sm font-medium cursor-pointer"
                           >
                             <Plus className="w-4 h-4" />
@@ -575,21 +568,21 @@ export default function ProjectSettingsPage() {
                           </button>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      {/* {getStatusBadge(project.status)} */}
+                      {/* {getStatusBadge(project.status)}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {/* <Button variant="outline" size="sm" className="gap-2">
+                {/* <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="gap-2">
                     <Settings className="w-4 h-4" />
                     Настройки
-                  </Button> */}
+                  </Button>
                   <Button size="sm" className="gap-2">
                     <Play className="w-4 h-4" />
-                    Запустить
+                    Запустить1
                   </Button>
                 </div>
-              </div>
+              </div> */}
 
               {/* Project Info Bar */}
               {/* <div className="flex items-center gap-4 text-sm mb-2">
@@ -629,15 +622,6 @@ export default function ProjectSettingsPage() {
                   className={`factory-tab-button ${activeTab === 'overview' ? 'active' : ''}`}
                 >
                   Обзор
-                </button>
-                <button
-                  ref={(el) => { if (el) tabElementsRef.current.set('upload', el); }}
-                  onClick={() => setActiveTab('upload')}
-                  onMouseEnter={() => setHoveredTab('upload')}
-                  onMouseLeave={() => setHoveredTab(null)}
-                  className={`factory-tab-button ${activeTab === 'upload' ? 'active' : ''}`}
-                >
-                  Референсы
                 </button>
                 <button
                   ref={(el) => { if (el) tabElementsRef.current.set('deployments', el); }}
@@ -715,7 +699,7 @@ export default function ProjectSettingsPage() {
           {/* <div className="">
             <div
               className="hover:bg-muted/20 bg-muted/10  border rounded-2xl py-2 transition-shadow cursor-pointer"
-              onClick={() => router.push(`/app/factory/${projectId}/upload`)}
+              onClick={() => router.push(`/ai-studio/${projectId}/upload`)}
             >
               <CardContent>
                 <div className="flex items-center gap-4">
@@ -752,7 +736,7 @@ export default function ProjectSettingsPage() {
                   <Button 
                     size="sm" 
                     className="gap-2"
-                    onClick={() => router.push(`/app/factory/${projectId}/publish`)}
+                    onClick={() => router.push(`/ai-studio/${projectId}/publish`)}
                   >
                     <ArrowUpRightIcon className="w-4 h-4" />
                     Опубликовать
@@ -764,19 +748,19 @@ export default function ProjectSettingsPage() {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-3 mt-4 gap-4">
-            <div className="hover:bg-muted/20 bg-muted/10 border rounded-2xl py-3 transition-shadow cursor-pointer" onClick={() => router.push(`/app/factory/${projectId}/upload`)}>
+            <div className="hover:bg-muted/20 bg-muted/10 border rounded-2xl py-3 transition-shadow cursor-pointer" onClick={() => router.push(`/ai-studio/${projectId}/upload`)}>
               <CardContent>
                 <h3 className="font-semibold ml-1.5">Референсы</h3>
                 <p className="text-sm text-muted-foreground">Просмотр загруженных изображений</p>
               </CardContent>
             </div>
-            <div className="hover:bg-muted/20 bg-muted/10 border rounded-2xl py-3 transition-shadow cursor-pointer" onClick={() => router.push(`/app/factory/${projectId}/upload`)}>
+            <div className="hover:bg-muted/20 bg-muted/10 border rounded-2xl py-3 transition-shadow cursor-pointer" onClick={() => router.push(`/ai-studio/${projectId}/upload`)}>
               <CardContent>
                 <h3 className="font-semibold ml-1.5">Генерация</h3>
                 <p className="text-sm text-muted-foreground">Создать контент</p>
               </CardContent>
             </div>
-            <div className="hover:bg-muted/20 bg-muted/10 border rounded-2xl py-3 transition-shadow cursor-pointer" onClick={() => router.push(`/app/factory/${projectId}/upload`)}>
+            <div className="hover:bg-muted/20 bg-muted/10 border rounded-2xl py-3 transition-shadow cursor-pointer" onClick={() => router.push(`/ai-studio/${projectId}/upload`)}>
               <CardContent>
                 <h3 className="font-semibold ml-1.5">Контент</h3>
                 <p className="text-sm text-muted-foreground">Создать видео</p>
@@ -883,7 +867,7 @@ export default function ProjectSettingsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => router.push(`/app/factory/${projectId}/upload`)}
+                    onClick={() => router.push(`/ai-studio/${projectId}/upload`)}
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Загрузить ещё
@@ -1621,7 +1605,7 @@ export default function ProjectSettingsPage() {
                       </CardContent>
                     </Card>
 
-                    <div>
+                    {/* <div>
                       <CardTitle className="flex items-center gap-2">
                         Пример использования
                       </CardTitle>
@@ -1629,7 +1613,6 @@ export default function ProjectSettingsPage() {
                     <Card>
                       <CardContent>
                         <div className="flex gap-4">
-                          {/* Code Block - Left */}
                           <div className="flex-1">
                             <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm overflow-x-auto">
                               <pre className="text-foreground">
@@ -1643,7 +1626,6 @@ const result = streamText({
                             </div>
                           </div>
                           
-                          {/* Provider Buttons - Right */}
                           <div className="flex flex-col gap-2">
                             <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
                               <div className="w-5 h-5 rounded bg-blue-500/20"></div>
@@ -1660,7 +1642,7 @@ const result = streamText({
                           </div>
                         </div>
                       </CardContent>
-                    </Card>
+                    </Card> */}
 
                   </div>
                 )}
@@ -3077,175 +3059,6 @@ const result = streamText({
               </div>
             )}
 
-            {/* Upload Tab */}
-            {activeTab === 'upload' && (
-              <div className="space-y-4">
-                {/* Main Content - Two Columns */}
-                <div className="grid mt-4 grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Left Column - Upload Area */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Загрузка файлов</CardTitle>
-                      <CardDescription>
-                        Перетащите файлы или нажмите для выбора
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="border-2 border-dashed rounded-lg p-12 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                      >
-                        <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-lg font-medium mb-2">
-                          Перетащите файлы сюда
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          или нажмите для выбора
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Видео (.mp4, .mov), изображения (.jpg, .png) или аудио (.mp3, .wav)
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Максимальный размер: 100 МБ на файл
-                        </p>
-                      </div>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="video/*,image/*,audio/*"
-                        multiple
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-
-                      {uploading && (
-                        <div className="space-y-2">
-                          <Progress value={uploadProgress} />
-                          <p className="text-sm text-center text-muted-foreground">
-                            Загрузка... {Math.round(uploadProgress)}%
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Right Column - Uploaded Files */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Загруженные файлы</CardTitle>
-                      <CardDescription>
-                        {references.length > 0 ? `${references.length} файлов` : 'Нет загруженных файлов'}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {references.length > 0 ? (
-                        <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                          {references.map((ref) => (
-                            <div
-                              key={ref._id}
-                              className="relative group rounded-lg border p-3 hover:border-primary/50 transition-colors"
-                            >
-                              <button
-                                onClick={() => handleDeleteReference(ref._id)}
-                                className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                                  {getFileIcon(ref.fileType)}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm truncate">{ref.fileName}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {ref.fileSize ? formatFileSize(ref.fileSize as number) : '—'} • {ref.fileType}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Analysis Status */}
-                              <div className="flex items-center gap-2 text-xs mt-2">
-                                {ref.analysisStatus === 'completed' && (
-                                  <>
-                                    <Check className="w-3 h-3" />
-                                    <span className="text-green-500">Анализ завершен</span>
-                                  </>
-                                )}
-                                {ref.analysisStatus === 'analyzing' && (
-                                  <>
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                    <span className="text-yellow-500">Анализ...</span>
-                                  </>
-                                )}
-                                {ref.analysisStatus === 'pending' && (
-                                  <>
-                                    <div className="w-3 h-3 rounded-full bg-muted" />
-                                    <span className="text-muted-foreground">Ожидает анализа</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12 text-muted-foreground">
-                          <Upload className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                          <p className="text-sm">Загрузите файлы для начала работы</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Bottom - Ready to Analyze */}
-                {references.length > 0 && (
-                  <Card className={`border-primary/20 ${references.length >= 10 ? 'bg-primary/5' : 'bg-muted/30'}`}>
-                    <CardContent className="px-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold mb-1">
-                            Готово к анализу!
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Загружено {references.length} файлов. AI создаст профиль стиля вашего бренда.
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={handleAnalyzeReferences}
-                            disabled={analyzing}
-                            size="lg"
-                            className="gap-2"
-                          >
-                            {analyzing ? (
-                              <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                Анализ...
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="w-5 h-5" />
-                                Начать анализ
-                              </>
-                            )}
-                          </Button>
-                          <Button
-                            onClick={() => router.push(`/app/factory/${projectId}/generate`)}
-                            size="lg"
-                            variant="outline"
-                            className="gap-2"
-                          >
-                            Перейти к генерации →
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-
             {/* Settings Tab */}
             {activeTab === 'settings' && (
               <div className="space-y-4">
@@ -3548,7 +3361,7 @@ const result = streamText({
                             <Palette className="w-12 h-12 mx-auto mb-4 opacity-50" />
                             <p className="text-muted-foreground">Профиль стиля еще не создан</p>
                             <p className="text-sm text-muted-foreground mt-2">Загрузите референсы и запустите анализ</p>
-                            <Button className="mt-4" onClick={() => router.push(`/app/factory/${projectId}/upload`)}>
+                            <Button className="mt-4" onClick={() => router.push(`/ai-studio/${projectId}/upload`)}>
                               Загрузить референсы
                             </Button>
                           </div>
@@ -3821,7 +3634,6 @@ const result = streamText({
             )}
           </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      // </div>
   );
 }

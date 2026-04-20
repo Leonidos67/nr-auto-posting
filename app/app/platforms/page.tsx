@@ -333,7 +333,7 @@ export default function PlatformsPage() {
           <div className='rounded-xl'>
             <div className="pb-1 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Доступные площадки</span>
+                <span className="text-sm font-medium">Доступные площадки (6)</span>
               </div>
               
               {/* Search Input */}

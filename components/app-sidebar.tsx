@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useParams } from "next/navigation"
 import {
   Command,
   LifeBuoy,
@@ -15,6 +16,7 @@ import {
   Factory,
   FolderArchive,
   FolderClock,
+  Sparkles,
 } from "lucide-react"
 
 import { NavMain } from '@/components/nav-main'
@@ -82,14 +84,14 @@ const data = {
       ],
     },
     {
+      title: "AI-Студия",
+      url: "/ai-studio",
+      icon: Sparkles,
+    },
+    {
       title: "Медиатека",
       url: "#",
       icon: Folder,
-    },
-    {
-      title: "Контент-Завод",
-      url: "/app/factory",
-      icon: Factory,
     },
     {
       title: "Площадки",
@@ -108,11 +110,66 @@ const data = {
 }
 
 export function AppSidebar({ user, onLogout, ...props }: AppSidebarProps) {
+  const params = useParams();
+  const projectId = params?.id as string;
+  
   const userData = {
     name: user.name,
     email: user.email,
     avatar: "/avatars/shadcn.jpg",
   };
+
+  // Динамические данные меню с projectId
+  const navMainData = [
+    {
+      title: "Главная",
+      url: "/app",
+      icon: Home,
+    },
+    {
+      title: "Мой профиль",
+      url: "/profile",
+      icon: User,
+    },
+    {
+      title: "Сгенерировать",
+      url: "#",
+      icon: Zap,
+      items: [
+        {
+          title: "Создать изображение",
+          url: "/app/image/new",
+        },
+        {
+          title: "Создать видео",
+          url: "/app/video/new",
+        },
+        {
+          title: "Наложить аудио",
+          url: "/app/audio/new",
+        },
+        {
+          title: "Работа с текстом",
+          url: "/app/text/new",
+        },
+      ],
+    },
+    {
+      title: "AI-Студия",
+      url: "/ai-studio",
+      icon: Sparkles,
+    },
+    {
+      title: "Медиатека",
+      url: "#",
+      icon: Folder,
+    },
+    {
+      title: "Площадки",
+      url: "/app/platforms",
+      icon: MonitorPlay,
+    },
+  ];
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -134,15 +191,15 @@ export function AppSidebar({ user, onLogout, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMainData} />
         <NavProjects />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
-      <SidebarFooter>
+      {/* <SidebarFooter>
         <div>
           <NavUser user={userData} />
         </div>
-      </SidebarFooter>
+      </SidebarFooter> */}
     </Sidebar>
   )
 }
