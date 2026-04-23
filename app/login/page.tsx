@@ -26,7 +26,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
     } catch (err: any) {
-      setError(err.message || 'Failed to login');
+      setError(err.message || 'Не удалось войти');
     } finally {
       setIsLoading(false);
     }
@@ -39,9 +39,9 @@ export default function LoginPage() {
       </div>
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Добро пожаловать</CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access your account
+            Введите свои данные для входа в аккаунт
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -53,7 +53,7 @@ export default function LoginPage() {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Электронная почта</Label>
               <Input
                 id="email"
                 type="email"
@@ -67,12 +67,12 @@ export default function LoginPage() {
             
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Пароль</Label>
                 <Link 
                   href="/forgot-password" 
                   className="text-sm text-blue-600 hover:underline"
                 >
-                  Forgot password?
+                  Забыли пароль?
                 </Link>
               </div>
               <Input
@@ -93,13 +93,13 @@ export default function LoginPage() {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Вход...' : 'Войти'}
             </Button>
             
             <p className="text-sm text-center text-gray-600">
-              Don't have an account?{' '}
+              Нет аккаунта?{' '}
               <Link href="/register" className="text-blue-600 hover:underline font-medium">
-                Sign up
+                Зарегистрироваться
               </Link>
             </p>
           </CardFooter>

@@ -403,7 +403,7 @@ export default function ProjectSettingsPage() {
 
     return (
       <div className="flex items-center gap-2">
-        <div className={`w-6 h-6 rounded ${fallbackColor} flex items-center justify-center text-xs font-bold flex-shrink-0`}>
+        <div className={`w-6 h-6 rounded bg-muted flex items-center justify-center text-xs font-bold flex-shrink-0`}>
           {initial}
         </div>
         <span className="font-medium">{provider}</span>

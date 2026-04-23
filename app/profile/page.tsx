@@ -167,13 +167,13 @@ export default function ProfilePage() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  value="https://syntx.ai/welcome/vVpxOY4Y"
+                  value="https://localhost:3000//welcome/vVpxOY4Y"
                   readOnly
                   className="flex-1 px-4 py-2 rounded-md bg-background border border-border text-sm"
                 />
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText('https://syntx.ai/welcome/vVpxOY4Y');
+                    navigator.clipboard.writeText('https://localhost:3000/welcome/vVpxOY4Y');
                   }}
                   className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium flex items-center gap-2 cursor-pointer"
                 >
